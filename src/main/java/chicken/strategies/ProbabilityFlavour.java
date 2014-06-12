@@ -1,6 +1,12 @@
 package chicken.strategies;
 
 import chicken.Cell;
+import chicken.Field;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by mley on 12.06.14.
@@ -57,6 +63,23 @@ public class ProbabilityFlavour extends AbstractFlavour {
     @Override
     public void play() {
         calcProbabilities();
+        List<Cell> cells = new ArrayList<>();
+        cells.addAll(f.getCellList());
+        // sort cells by probability
+        Collections.sort(cells, new Comparator<Cell>() {
+            @Override
+            public int compare(Cell o, Cell o2) {
+                double diff = o.getProbability() - o2.getProbability();
+                if( diff > 0) {
+                    return 1;
+                } else if(diff < 0) {
+                    return -1;
+                }
+                return 0;
+            }
+        });
+
+        f.fire(cells.get(0).getLocation(), Field.Special.None);
 
     }
 }
