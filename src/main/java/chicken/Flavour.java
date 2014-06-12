@@ -5,7 +5,7 @@ package chicken;
  */
 public interface Flavour {
 
-    void configure(Plate bws, Tortilla tortilla);
+    void configure(WSHandler bws, Field field);
     void placeShips();
     void play();
 }

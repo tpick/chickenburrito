@@ -14,16 +14,16 @@ public class Burrito {
             destUri = args[0];
         }
 
-        Plate s1 = createClient(destUri, "foo");
-        //Plate s2 = createClient(destUri, "bar");
+        WSHandler s1 = createClient(destUri, "foo");
+        //WSHandler s2 = createClient(destUri, "bar");
 
         s1.awaitClose(60, TimeUnit.SECONDS);
 
     }
 
-    private static Plate createClient(String destUri, String name) throws Exception {
+    private static WSHandler createClient(String destUri, String name) throws Exception {
         WebSocketClient client = new WebSocketClient();
-        Plate socket = new Plate(name);
+        WSHandler socket = new WSHandler(name);
 
             client.start();
             URI echoUri = new URI(destUri);

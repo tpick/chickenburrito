@@ -1,6 +1,6 @@
 package chicken.strategies;
 
-import chicken.Tortilla;
+import chicken.Field;
 import chicken.Point;
 
 import java.util.Random;
@@ -19,7 +19,7 @@ public class DumbFlavour extends AbstractFlavour {
 
     @Override
     public void play() {
-        f.fire(new Point(r.nextInt(10), r.nextInt(10)), Tortilla.Special.None);
+        f.fire(new Point(r.nextInt(10), r.nextInt(10)), Field.Special.None);
 
     }
 }
