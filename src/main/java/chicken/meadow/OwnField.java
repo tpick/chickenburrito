@@ -41,7 +41,7 @@ public class OwnField extends Field {
                 placed = true;
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage());
-                for(Cell c : getCellList()) {
+                for (Cell c : getCellList()) {
                     c.setObservedPieces(0);
                 }
             }
@@ -80,10 +80,13 @@ public class OwnField extends Field {
             p = new Point(x, y);
             tried++;
         } while (!place(d, p, horizontal) && (tried <= 10000));
-        System.out.println("Tried: "+tried+" for "+d.getType());
-        if(tried > 10000) {
-            throw new IllegalStateException("failed to place ship : "+d.getType());
+        System.out.println("Tried: " + tried + " for " + d.getType());
+        if (tried > 10000) {
+            throw new IllegalStateException("failed to place ship : " + d.getType());
         }
+
+        sendPlacement(d, p, horizontal);
+
     }
 
     private boolean place(Ship d, Point p, boolean horizontal) {
@@ -105,6 +108,20 @@ public class OwnField extends Field {
         }
 
         return true;
+    }
+
+    private void sendPlacement(Ship d, Point p, boolean horizontal) {
+        String shipStr = "";
+        Cell b = bean(p);
+        for (int i = 0; i < d.getType().length; i++) {
+            shipStr += b.getLocation().toString();
+            if (i < d.getType().length - 1) {
+                shipStr += ",";
+            }
+            b = b.next(horizontal ? Special.West : Special.South);
+        }
+        System.out.println(shipStr);
+        this.getBws().send(shipStr);
     }
 
     private boolean checkAround(Cell in) {
