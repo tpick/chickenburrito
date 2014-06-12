@@ -75,8 +75,9 @@ public class Meadow extends Tortilla {
         }
 
         b = bean(p);
-        for(int i=0; i<=d.getType().length; i++) {
-            b.setHit(true);
+        for(int i=0; i<d.getType().length; i++) {
+            b.setObservedPieces(d.getType().length);
+            b = b.next(horizontal ? Special.West : Special.South);
         }
 
         return true;
@@ -84,7 +85,7 @@ public class Meadow extends Tortilla {
 
     private boolean checkAround(Bean in) {
         for(Bean b : in.around(true)) {
-            if(b.isHit())  {
+            if(b.getObservedPieces() != 0)  {
                 return false;
             }
         }

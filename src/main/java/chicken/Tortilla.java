@@ -115,7 +115,8 @@ public class Tortilla implements Iterable<Bean> {
     public void print() {
         for(int x=0; x<beans.length; x++) {
             for(int y=0; y<beans[x].length; y++) {
-                System.out.print( beans[x][y].isHit()?"X":"0");
+                int i =  beans[x][y].getObservedPieces();
+                System.out.print(i>0?""+i:" ");
             }
             System.out.println();
         }
