@@ -60,6 +60,7 @@ public class OwnField extends Field {
             p = new Point(x, y);
 
         } while(!place(d, p, horizontal));
+        sendPlacement(d, p, horizontal);
     }
 
     private boolean place( Ship d, Point p, boolean horizontal) {
@@ -81,6 +82,20 @@ public class OwnField extends Field {
         }
 
         return true;
+    }
+
+    private void sendPlacement(Ship d, Point p, boolean horizontal) {
+        String shipStr = "";
+        Cell b = bean(p);
+        for (int i = 0; i < d.getType().length; i++) {
+            shipStr += b.getLocation().toString();
+            if (i < d.getType().length - 1) {
+                shipStr += ",";
+            }
+            b = b.next(horizontal ? Special.West : Special.South);
+        }
+        System.out.println(shipStr);
+        this.getBws().send(shipStr);
     }
 
     private boolean checkAround(Cell in) {

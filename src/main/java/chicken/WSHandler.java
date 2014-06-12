@@ -2,6 +2,7 @@ package chicken;
 
 
 import chicken.strategies.DumbFlavour;
+import chicken.strategies.SmartFlavour;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
@@ -45,7 +46,7 @@ public class WSHandler implements Constants {
         System.out.printf("Got connect: %s%n", session);
         this.session = session;
 
-        s = new DumbFlavour();
+        s = new SmartFlavour();
         f = new Field(this);
         s.configure(this, f);
 
