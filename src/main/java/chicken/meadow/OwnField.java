@@ -47,10 +47,11 @@ public class OwnField extends Field {
                 for (Cell c : getCellList()) {
                     c.setObservedPieces(0);
                 }
+                ships.clear();
             }
         }
         for(Ship s : ships) {
-            bws.send(s.getShipString());
+           getBws().send(s.getShipString());
         }
     }
 

@@ -87,4 +87,16 @@ public class Cell {
         }
     }
 
+    public Cell get(Field.Special... dirs) {
+        Cell c = this;
+        for (Field.Special d : dirs) {
+            if(c == null) {
+                return null;
+            }
+            c = c.next(d);
+        }
+        return c;
+    }
+
+
 }

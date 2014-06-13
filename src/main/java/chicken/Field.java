@@ -28,6 +28,26 @@ public class Field implements Iterable<Cell> {
             this.s = s;
         }
 
+        public static final List<Special> DIRECTIONS;
+        static {
+            DIRECTIONS = new ArrayList<>();
+            DIRECTIONS.add(North);
+            DIRECTIONS.add(West);
+            DIRECTIONS.add(South);
+            DIRECTIONS.add(East);
+        }
+
+        public Special opposite() {
+            switch(this) {
+                case North: return South;
+                case West: return East;
+                case South: return North;
+                case East: return West;
+                default:
+                    throw new IllegalStateException("not a direction: "+this);
+            }
+        }
+
         public final String s;
     }
 
@@ -55,6 +75,7 @@ public class Field implements Iterable<Cell> {
         }
         bean(p).setShotAt(true);
         bws.send(special.s + p);
+        System.out.println("Firing: "+special.s + p);
         lastShot = p;
         lastSpecial = special;
     }
@@ -97,7 +118,32 @@ public class Field implements Iterable<Cell> {
     }
 
     public void lastShotSunkShip(String msg) {
-        bean(lastShot).setHit(true);
+        Cell c = bean(lastShot);
+        c.setHit(true);
+        boolean horizontal = false;
+        if((c.east() != null && c.east().isHit()) ||(c.west() != null && c.west().isHit()) ) {
+            horizontal = true;
+        }
+
+        if(horizontal) {
+             markSunkShip(c, Special.East, Special.West);
+        } else {
+            markSunkShip(c, Special.North, Special.South);
+        }
+
+    }
+
+    private void markSunkShip(Cell c, Special... dirs) {
+
+        for(Special s : dirs) {
+            Cell a = c;
+            while(a != null && a.isHit()) {
+                a = a.next(s);
+                if(a != null && !a.isHit()) {
+                    a.setKnownClear(true);
+                }
+            }
+        }
     }
 
     public void observed(String msg) {
@@ -114,11 +160,19 @@ public class Field implements Iterable<Cell> {
 
     public void print() {
         for(int x=0; x< cells.length; x++) {
+            System.out.print("|");
             for(int y=0; y< cells[x].length; y++) {
-                int i =  cells[x][y].getObservedPieces();
-                System.out.print(i>0?""+i:" ");
+                Cell c = cells[x][y];
+                String s = "??";
+                if(c.isKnownClear()) {
+                    s = "  ";
+                } else if(c.isHit()) {
+                    s = "><";
+                }
+
+                System.out.print(s);
             }
-            System.out.println();
+            System.out.println("|");
         }
     }
 }

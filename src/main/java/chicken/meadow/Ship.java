@@ -15,13 +15,25 @@ public class Ship {
         Submarine(2);
 
         public final int length;
+
         private Type(int l) {
             length = l;
+        }
+
+        public Type fromString(String s) {
+            for (Type t : Type.values()) {
+                if (t.name().toLowerCase().substring(0, 2).equals(s.toLowerCase().substring(0, 2))) {
+                    return t;
+                }
+            }
+            return null;
+
         }
     }
 
     private final Type type;
     private String shipString;
+
     public Ship(Type type) {
         this.type = type;
     }
