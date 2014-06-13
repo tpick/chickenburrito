@@ -5,6 +5,8 @@ import chicken.Field;
 import chicken.Point;
 import chicken.WSHandler;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -28,16 +30,17 @@ public class OwnField extends Field {
 
     public void placeShips() {
         boolean placed = false;
+        List<Ship> ships = new ArrayList<>();
         while (!placed) {
             try {
-                place(new Ship(Ship.Type.Carrier));
-                place(new Ship(Ship.Type.Carrier));
-                place(new Ship(Ship.Type.Cruiser));
-                place(new Ship(Ship.Type.Cruiser));
-                place(new Ship(Ship.Type.Destroya));
-                place(new Ship(Ship.Type.Destroya));
-                place(new Ship(Ship.Type.Submarine));
-                place(new Ship(Ship.Type.Submarine));
+                ships.add(place(new Ship(Ship.Type.Carrier)));
+                ships.add(place(new Ship(Ship.Type.Carrier)));
+                ships.add(place(new Ship(Ship.Type.Cruiser)));
+                ships.add(place(new Ship(Ship.Type.Cruiser)));
+                ships.add(place(new Ship(Ship.Type.Destroya)));
+                ships.add(place(new Ship(Ship.Type.Destroya)));
+                ships.add(place(new Ship(Ship.Type.Submarine)));
+                ships.add(place(new Ship(Ship.Type.Submarine)));
                 placed = true;
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage());
@@ -45,11 +48,13 @@ public class OwnField extends Field {
                     c.setObservedPieces(0);
                 }
             }
-
+        }
+        for(Ship s : ships) {
+            bws.send(s.getShipString());
         }
     }
 
-    private void place(Ship d) {
+    private Ship place(Ship d) {
         int tried = 0;
         Point p;
         boolean horizontal;
@@ -80,12 +85,12 @@ public class OwnField extends Field {
             p = new Point(x, y);
             tried++;
         } while (!place(d, p, horizontal) && (tried <= 10000));
-        System.out.println("Tried: " + tried + " for " + d.getType());
+
         if (tried > 10000) {
             throw new IllegalStateException("failed to place ship : " + d.getType());
         }
 
-        sendPlacement(d, p, horizontal);
+        return d;
 
     }
 
@@ -102,26 +107,17 @@ public class OwnField extends Field {
         }
 
         b = bean(p);
+        String shipStr = "";
         for (int i = 0; i < d.getType().length; i++) {
             b.setObservedPieces(d.getType().length);
-            b = b.next(horizontal ? Special.West : Special.South);
-        }
-
-        return true;
-    }
-
-    private void sendPlacement(Ship d, Point p, boolean horizontal) {
-        String shipStr = "";
-        Cell b = bean(p);
-        for (int i = 0; i < d.getType().length; i++) {
             shipStr += b.getLocation().toString();
             if (i < d.getType().length - 1) {
                 shipStr += ",";
             }
             b = b.next(horizontal ? Special.West : Special.South);
         }
-        System.out.println(shipStr);
-        this.getBws().send(shipStr);
+        d.setShipString(shipStr);
+        return true;
     }
 
     private boolean checkAround(Cell in) {

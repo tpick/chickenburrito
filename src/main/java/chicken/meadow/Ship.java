@@ -21,6 +21,7 @@ public class Ship {
     }
 
     private final Type type;
+    private String shipString;
     public Ship(Type type) {
         this.type = type;
     }
