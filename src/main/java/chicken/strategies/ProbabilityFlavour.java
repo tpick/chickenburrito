@@ -161,6 +161,5 @@ public class ProbabilityFlavour extends AbstractFlavour {
         f.print();
         f.fire(fire.getLocation(), Field.Special.None);
 
-
     }
 }

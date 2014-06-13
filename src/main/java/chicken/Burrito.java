@@ -13,8 +13,7 @@ public class Burrito {
             destUri = args[0];
         }
         System.out.printf("Battleship Server Endpoint: %s%n", destUri);
-        WSHandler s1 = createClient(destUri, "foo");
-        //WSHandler s2 = createClient(destUri, "bar");
+        WSHandler s1 = createClient(destUri, "ChickenBurrito");
 
         while (!s1.waitForClose()) {
 

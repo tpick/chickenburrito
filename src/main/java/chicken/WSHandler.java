@@ -16,7 +16,9 @@ public class WSHandler implements Constants {
     private Session session;
     private String name;
     private volatile boolean closed = false;
-
+    private int turns;
+    private int shots;
+    private int misses;
     public WSHandler(String name) {
         this.name = name;
     }
@@ -49,7 +51,8 @@ public class WSHandler implements Constants {
         s = new ProbabilityFlavour();
         f = new Field(this);
         s.configure(this, f);
-
+        turns = 0;
+        System.out.println("Connected. Starting game...");
         send("play");
 
 
@@ -80,30 +83,36 @@ public class WSHandler implements Constants {
                 session.close();
                 break;
             case HELLO:
-                //send("rename "+name);
+                send("rename "+name);
                 break;
             case PLACE_SHIPS:
                 s.placeShips();
                 break;
             case ENEMY_SHIP_HIT:
                 f.lastShotHit(true, msg);
+
                 s.play();
+                shots++;
                 break;
             case ENEMY_SHIP_MISSED:
                 f.lastShotHit(false, msg);
+                misses++;
                 break;
             case ENEMY_SHIP_SUNK:
                 f.lastShotSunkShip(msg);
                 s.play();
+                shots++;
                 break;
             case YOUR_TURN:
                 s.play();
+                shots++;
+                turns++;
                 break;
             case DRONE:
                 f.observed(msg);
                 break;
             case YOU_WIN:
-                System.out.println("WIN!!");
+                System.out.printf("WIN in %d turns with %d shots and %d misses.%n", turns, shots, misses);
                 session.close();
                 break;
             case YOU_LOSE:
