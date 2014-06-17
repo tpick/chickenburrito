@@ -71,7 +71,7 @@ public class ProbabilityFlavour extends AbstractFlavour {
         }
 
         int knownCells = hits + emptyCells;
-        int unknownCells = 100 - knownCells;
+        int unknownCells = 256 - knownCells;
         int unknownShipCells = 28 - hits;
         double avgUnknownCellProbability = ((double)unknownShipCells) /((double) unknownCells);
 

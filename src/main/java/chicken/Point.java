@@ -18,8 +18,8 @@ public class Point {
     }
 
     public Point(String p) {
-        x = 'A' - p.toUpperCase().charAt(0);
-        y = Integer.parseInt(p.substring(1, 2));
+        x = Integer.parseInt(p.substring(0, 1), 16);
+        y = Integer.parseInt(p.substring(1, 2), 16);
     }
 
     public Point neighbour(int dx, int dy) {
@@ -27,6 +27,6 @@ public class Point {
     }
 
     public String toString() {
-        return ("" + (char) ('A' + x)) + y;
+        return Integer.toHexString(x)+Integer.toHexString(y);
     }
 }

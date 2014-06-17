@@ -90,7 +90,6 @@ public class WSHandler implements Constants {
                 break;
             case ENEMY_SHIP_HIT:
                 f.lastShotHit(true, msg);
-
                 s.play();
                 shots++;
                 break;
@@ -116,13 +115,18 @@ public class WSHandler implements Constants {
                 session.close();
                 break;
             case YOU_LOSE:
-                System.out.println("FAIL");
+                System.out.printf("FAIL in %d turns with %d shots and %d misses.%n", turns, shots, misses);
                 session.close();
                 break;
             case GAME_OVER:
                 session.close();
                 break;
+            case YOUR_SHIP_MISSED:
+            case YOUR_SHIP_HIT:
+            case YOUR_SHIP_SUNK:
+                System.out.printf("%d %s%n", code, msg);
 
+                break;
 
         }
     }

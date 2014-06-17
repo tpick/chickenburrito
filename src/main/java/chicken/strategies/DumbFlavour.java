@@ -19,7 +19,7 @@ public class DumbFlavour extends AbstractFlavour {
 
     @Override
     public void play() {
-        f.fire(new Point(r.nextInt(10), r.nextInt(10)), Field.Special.None);
+        f.fire(new Point(r.nextInt(16), r.nextInt(16)), Field.Special.None);
 
     }
 }

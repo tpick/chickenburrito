@@ -53,7 +53,7 @@ public class Field implements Iterable<Cell> {
 
 
     private WSHandler bws;
-    private Cell[][] cells = new Cell[10][10];
+    private Cell[][] cells = new Cell[16][16];
     private List<Cell> cellList = new ArrayList<>();
     private Point lastShot;
     private Special lastSpecial;
@@ -152,7 +152,7 @@ public class Field implements Iterable<Cell> {
     }
 
     public Cell bean(Point p) {
-        if(p.x < 0 || p.x >=10 || p.y < 0 || p.y >= 10 ) {
+        if(p.x < 0 || p.x >=16 || p.y < 0 || p.y >= 16 ) {
             return null;
         }
         return cells[p.x][p.y];
@@ -163,11 +163,11 @@ public class Field implements Iterable<Cell> {
             System.out.print("|");
             for(int y=0; y< cells[x].length; y++) {
                 Cell c = cells[x][y];
-                String s = "??";
+                String s = "▒▒";
                 if(c.isKnownClear()) {
                     s = "  ";
                 } else if(c.isHit()) {
-                    s = "><";
+                    s = "▉▉";
                 }
 
                 System.out.print(s);

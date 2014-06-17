@@ -60,8 +60,8 @@ public class OwnField extends Field {
         Point p;
         boolean horizontal;
         do {
-            int x = r.nextInt(10);
-            int y = r.nextInt(10);
+            int x = r.nextInt(16);
+            int y = r.nextInt(16);
 
             if (x == 0) {
                 x = 1;
@@ -73,13 +73,13 @@ public class OwnField extends Field {
             horizontal = r.nextBoolean();
             if (horizontal) {
                 int end = x + d.getType().length - 1;
-                if (end > 10) {
-                    x = 10 - d.getType().length - 1;
+                if (end > 16) {
+                    x = 16 - d.getType().length - 1;
                 }
             } else {
                 int end = y + d.getType().length;
-                if (end > 10) {
-                    y = 10 - d.getType().length;
+                if (end > 16) {
+                    y = 16 - d.getType().length;
                 }
             }
 
