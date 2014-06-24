@@ -2,6 +2,7 @@ package chicken;
 
 
 import chicken.stats.ShootStats;
+import chicken.strategies.DumbFlavour;
 import chicken.strategies.ProbabilityFlavour;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -57,24 +58,10 @@ public class WSHandler implements Constants {
     public void onConnect(Session session) {
         this.session = session;
         System.out.println("Connected. Starting game...");
-        startGame();
-        currentRound = 1;
 
-
-
-
-    }
-
-    private void startGame() {
-        s = new ProbabilityFlavour();
-        f = new Field(this, s);
-        name = "ChickenBurrito";
-        shootStats = new ShootStats();
-        s.configure(this, f);
-        turns = 0;
-        shots = 0;
-        misses = 0;
+        currentRound = 0;
         send("play");
+
     }
 
     public void send(String s) {
@@ -113,6 +100,8 @@ public class WSHandler implements Constants {
                 send("rename " + name);
                 break;
             case PLACE_SHIPS:
+                nextGame();
+
                 s.placeShips();
                 break;
             case ENEMY_SHIP_HIT:
@@ -140,14 +129,11 @@ public class WSHandler implements Constants {
                 break;
             case YOU_WIN:
                 s.gameOver(true);
-                nextGame();
                 break;
             case YOU_LOSE:
                 s.gameOver(false);
-                nextGame();
-                break;
+                 break;
             case GAME_OVER:
-                nextGame();
                 break;
             case YOUR_SHIP_MISSED:
                 shootStats.miss(msg);
@@ -187,6 +173,9 @@ public class WSHandler implements Constants {
 
     private void nextGame() {
         if (currentRound >= rounds) {
+            int[] stat = new int[]{turns, shots, misses};
+            stats.add(stat);
+
             session.close();
             turns = 0;
             shots = 0;
@@ -201,10 +190,25 @@ public class WSHandler implements Constants {
 
 
         } else {
+            if(currentRound > 0) {
+                int[] stat = new int[]{turns, shots, misses};
+                stats.add(stat);
+            }
             currentRound++;
-            int[] stat = new int[] {turns, shots, misses};
-            stats.add(stat);
-            startGame();
+
+            if("dumm".equals(name)) {
+                s = new DumbFlavour();
+            } else {
+                s = new ProbabilityFlavour();
+            }
+            f = new Field(this, s);
+
+            shootStats = new ShootStats();
+            shootStats.setName(opponentName);
+            s.configure(this, f);
+            turns = 0;
+            shots = 0;
+            misses = 0;
         }
 
     }
@@ -212,7 +216,7 @@ public class WSHandler implements Constants {
     private void saveOpponentName(String msg) {
         opponentName = msg.substring(msg.indexOf("vs. ") + 4, msg.length() - 12);
         rounds = Integer.parseInt(msg.substring(14, msg.indexOf("rounds vs.") - 1));
-        shootStats.setName(opponentName);
+
 
     }
 

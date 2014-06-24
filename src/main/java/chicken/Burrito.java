@@ -9,11 +9,21 @@ public class Burrito {
 
     public static void main(String[] args) throws Exception {
         String destUri = "ws://localhost:40000/battle";
+        String name = "ChickenBurrito";
+
         if (args.length > 0) {
-            destUri = args[0];
+            if(args[0].startsWith("ws://")) {
+                destUri = args[0];
+            }
+            name = args[0];
+        }
+        if (args.length > 1) {
+            destUri = args[1];
         }
         System.out.printf("Battleship Server Endpoint: %s%n", destUri);
-        WSHandler s1 = createClient(destUri, "ChickenBurrito");
+        System.out.printf("Player name: %s%n", name);
+
+        WSHandler s1 = createClient(destUri, name);
 
         while (!s1.waitForClose()) {
 

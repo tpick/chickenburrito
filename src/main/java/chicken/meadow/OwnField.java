@@ -6,6 +6,7 @@ import chicken.Point;
 import chicken.WSHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -25,7 +26,6 @@ public class OwnField extends Field {
     public static void main(String[] args) {
         OwnField m = new OwnField(null);
         m.placeShips();
-        m.print();
     }
 
     public void placeShips() {
@@ -33,15 +33,33 @@ public class OwnField extends Field {
         List<Ship> ships = new ArrayList<>();
         while (!placed) {
             try {
-                Ship c = place(new Ship(Ship.Type.Carrier));
-                ships.add(c);
-                ships.add(place(new Ship(Ship.Type.Carrier), c.getHorizontal(), c.getLoc().x, c.getLoc().y));
-                ships.add(place(new Ship(Ship.Type.Cruiser)));
-                ships.add(place(new Ship(Ship.Type.Cruiser)));
-                ships.add(place(new Ship(Ship.Type.Destroya)));
-                ships.add(place(new Ship(Ship.Type.Destroya)));
-                ships.add(place(new Ship(Ship.Type.Submarine)));
-                ships.add(place(new Ship(Ship.Type.Submarine)));
+
+                ships.add(new Ship(Ship.Type.Carrier));
+
+                ships.add(new Ship(Ship.Type.Carrier));
+                ships.add(new Ship(Ship.Type.Destroya));
+                ships.add(new Ship(Ship.Type.Destroya));
+                ships.add(new Ship(Ship.Type.Cruiser));
+                ships.add(new Ship(Ship.Type.Cruiser));
+                ships.add(new Ship(Ship.Type.Submarine));
+                ships.add(new Ship(Ship.Type.Submarine));
+                Collections.shuffle(ships, r);
+
+                Ship carrier = null;
+                for (Ship s : ships) {
+                    if (s.getType() == Ship.Type.Carrier) {
+                        if (carrier == null) {
+                            carrier = s;
+                            place(s);
+                        } else {
+                            place(s, carrier.getHorizontal(), carrier.getLoc().x, carrier.getLoc().y);
+                        }
+
+                    } else {
+                        place(s);
+                    }
+                }
+
                 placed = true;
             } catch (IllegalStateException e) {
                 System.out.println(e.getMessage());
@@ -54,13 +72,16 @@ public class OwnField extends Field {
 
         print();
 
-        for(Ship s : ships) {
-           getBws().send(s.getShipString());
+        if (getBws() != null) {
+            for (Ship s : ships) {
+                getBws().send(s.getShipString());
+            }
         }
     }
 
     /**
      * place ship with preferred orientation and x or y for maximum cluster bombs
+     *
      * @param d
      * @param horizontal
      * @param prefX
@@ -73,7 +94,7 @@ public class OwnField extends Field {
 
         do {
             int x, y;
-            if(horizontal) {
+            if (horizontal) {
                 x = prefX;
                 y = r.nextInt(16);
             } else {
@@ -88,6 +109,7 @@ public class OwnField extends Field {
         if (tried > 10000) {
             throw new IllegalStateException("failed to place ship : " + d.getType());
         }
+        System.out.printf("Needed %d tries to place %s%n", tried, d.getType());
 
         return d;
 
@@ -101,18 +123,11 @@ public class OwnField extends Field {
             int x = r.nextInt(16);
             int y = r.nextInt(16);
 
-            if (x == 0) {
-                x = 1;
-            }
-            if (y == 0) {
-                y = 1;
-            }
-
             horizontal = r.nextBoolean();
             if (horizontal) {
-                int end = x + d.getType().length - 1;
+                int end = x + d.getType().length;
                 if (end > 16) {
-                    x = 16 - d.getType().length - 1;
+                    x = 16 - d.getType().length;
                 }
             } else {
                 int end = y + d.getType().length;
@@ -128,7 +143,7 @@ public class OwnField extends Field {
         if (tried > 10000) {
             throw new IllegalStateException("failed to place ship : " + d.getType());
         }
-
+        System.out.printf("Needed %d tries to place %s%n", tried, d.getType());
         return d;
 
     }
@@ -173,7 +188,7 @@ public class OwnField extends Field {
     public void print() {
         System.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
         for (int y = 0; y < 16; y++) {
-            System.out.print(Integer.toHexString(y)+"  |" );
+            System.out.print(Integer.toHexString(y) + "  |");
             for (int x = 0; x < 16; x++) {
                 Cell c = cells[x][y];
                 String s = "  ";

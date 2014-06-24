@@ -1,8 +1,8 @@
 package chicken.strategies;
 
-import chicken.Cell;
 import chicken.Field;
 import chicken.Point;
+import chicken.meadow.OwnField;
 
 import java.util.Random;
 
@@ -15,7 +15,8 @@ public class DumbFlavour extends AbstractFlavour {
 
     @Override
     public void placeShips() {
-        bws.send("defaultships");
+        OwnField of = new OwnField(bws);
+        of.placeShips();
     }
 
     @Override
