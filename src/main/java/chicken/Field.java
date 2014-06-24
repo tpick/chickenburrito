@@ -198,7 +198,7 @@ public class Field implements Iterable<Cell>, Constants {
                     c.setKnownClear(true);
                 }
                 for (Special s : Special.DIRECTIONS) {
-                    if(!c.isHit()) {
+                    if(c.next(s) != null && !c.next(s).isHit()) {
                         c.next(s).setKnownClear(true);
                     }
                 }

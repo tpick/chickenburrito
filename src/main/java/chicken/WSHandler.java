@@ -27,6 +27,7 @@ public class WSHandler implements Constants {
     private int rounds;
     private int currentRound;
     private List<int[]> stats = new ArrayList<>();
+
     public WSHandler(String name) {
         this.name = name;
     }
@@ -101,7 +102,6 @@ public class WSHandler implements Constants {
                 break;
             case PLACE_SHIPS:
                 nextGame();
-
                 s.placeShips();
                 break;
             case ENEMY_SHIP_HIT:
@@ -129,10 +129,12 @@ public class WSHandler implements Constants {
                 break;
             case YOU_WIN:
                 s.gameOver(true);
+                printStats();
                 break;
             case YOU_LOSE:
                 s.gameOver(false);
-                 break;
+                printStats();
+                break;
             case GAME_OVER:
                 break;
             case YOUR_SHIP_MISSED:
@@ -165,51 +167,54 @@ public class WSHandler implements Constants {
     }
 
     private void play(int code) {
-        if(!waitForTurn || code == YOUR_TURN) {
+
+        if (!waitForTurn || code == YOUR_TURN) {
             s.play();
             waitForTurn = f.getLastSpecial() != Field.Special.None;
         }
     }
 
-    private void nextGame() {
+    private void printStats() {
         if (currentRound >= rounds) {
             int[] stat = new int[]{turns, shots, misses};
             stats.add(stat);
 
-            session.close();
             turns = 0;
             shots = 0;
             misses = 0;
-            for(int[] s : stats) {
+            for (int[] s : stats) {
                 System.out.printf("%d turns with %d shots and %d misses.%n", s[0], s[1], s[2]);
                 turns += s[0];
                 shots += s[1];
                 misses += s[2];
             }
-            System.out.printf("AVG: %d turns with %d shots and %d misses.%n", turns/rounds, shots/rounds, misses/rounds);
-
-
-        } else {
-            if(currentRound > 0) {
-                int[] stat = new int[]{turns, shots, misses};
-                stats.add(stat);
-            }
-            currentRound++;
-
-            if("dumm".equals(name)) {
-                s = new DumbFlavour();
-            } else {
-                s = new ProbabilityFlavour();
-            }
-            f = new Field(this, s);
-
-            shootStats = new ShootStats();
-            shootStats.setName(opponentName);
-            s.configure(this, f);
-            turns = 0;
-            shots = 0;
-            misses = 0;
+            System.out.printf("AVG: %d turns with %d shots and %d misses.%n", turns / rounds, shots / rounds, misses / rounds);
         }
+    }
+
+    private void nextGame() {
+
+
+        if (currentRound > 0) {
+            int[] stat = new int[]{turns, shots, misses};
+            stats.add(stat);
+        }
+        currentRound++;
+
+        if ("dumm".equals(name)) {
+            s = new DumbFlavour();
+        } else {
+            s = new ProbabilityFlavour();
+        }
+        f = new Field(this, s);
+
+        shootStats = new ShootStats();
+        shootStats.setName(opponentName);
+        s.configure(this, f);
+        turns = 0;
+        shots = 0;
+        misses = 0;
+
 
     }
 
