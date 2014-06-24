@@ -1,5 +1,6 @@
 package chicken.strategies;
 
+import chicken.Cell;
 import chicken.Field;
 import chicken.Point;
 
@@ -22,4 +23,6 @@ public class DumbFlavour extends AbstractFlavour {
         f.fire(new Point(r.nextInt(16), r.nextInt(16)), Field.Special.None);
 
     }
+
+
 }

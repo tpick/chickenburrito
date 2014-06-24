@@ -16,7 +16,7 @@ public class OwnField extends Field {
 
 
     public OwnField(WSHandler WSHandler) {
-        super(WSHandler);
+        super(WSHandler, null);
         r = new Random();
     }
 
@@ -33,8 +33,9 @@ public class OwnField extends Field {
         List<Ship> ships = new ArrayList<>();
         while (!placed) {
             try {
-                ships.add(place(new Ship(Ship.Type.Carrier)));
-                ships.add(place(new Ship(Ship.Type.Carrier)));
+                Ship c = place(new Ship(Ship.Type.Carrier));
+                ships.add(c);
+                ships.add(place(new Ship(Ship.Type.Carrier), c.getHorizontal(), c.getLoc().x, c.getLoc().y));
                 ships.add(place(new Ship(Ship.Type.Cruiser)));
                 ships.add(place(new Ship(Ship.Type.Cruiser)));
                 ships.add(place(new Ship(Ship.Type.Destroya)));
@@ -50,9 +51,46 @@ public class OwnField extends Field {
                 ships.clear();
             }
         }
+
+        print();
+
         for(Ship s : ships) {
            getBws().send(s.getShipString());
         }
+    }
+
+    /**
+     * place ship with preferred orientation and x or y for maximum cluster bombs
+     * @param d
+     * @param horizontal
+     * @param prefX
+     * @param prefY
+     * @return
+     */
+    private Ship place(Ship d, boolean horizontal, int prefX, int prefY) {
+        int tried = 0;
+        Point p;
+
+        do {
+            int x, y;
+            if(horizontal) {
+                x = prefX;
+                y = r.nextInt(16);
+            } else {
+                x = r.nextInt(16);
+                y = prefY;
+            }
+
+            p = new Point(x, y);
+            tried++;
+        } while (!place(d, p, horizontal) && (tried <= 10000));
+
+        if (tried > 10000) {
+            throw new IllegalStateException("failed to place ship : " + d.getType());
+        }
+
+        return d;
+
     }
 
     private Ship place(Ship d) {
@@ -117,7 +155,9 @@ public class OwnField extends Field {
             }
             b = b.next(horizontal ? Special.West : Special.South);
         }
+        d.setHorizontal(horizontal);
         d.setShipString(shipStr);
+        d.setLoc(p);
         return true;
     }
 
@@ -128,5 +168,22 @@ public class OwnField extends Field {
             }
         }
         return true;
+    }
+
+    public void print() {
+        System.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
+        for (int y = 0; y < 16; y++) {
+            System.out.print(Integer.toHexString(y)+"  |" );
+            for (int x = 0; x < 16; x++) {
+                Cell c = cells[x][y];
+                String s = "  ";
+                if (c.getObservedPieces() > 0) {
+                    s = "▉▉";
+                }
+                System.out.print(s);
+            }
+            System.out.println("|");
+        }
+
     }
 }

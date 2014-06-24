@@ -3,11 +3,12 @@ package chicken;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
 @Data
-public class Cell {
+public class Cell implements Comparable<Cell>{
 
     public Cell(Point p, Field f) {
         this.location = p;
@@ -28,7 +29,7 @@ public class Cell {
     }
 
     public Cell west() {
-        return f.bean(location.neighbour(1, 0));
+        return f.bean(location.neighbour(-1, 0));
     }
 
     public Cell south() {
@@ -36,7 +37,7 @@ public class Cell {
     }
 
     public Cell east() {
-        return f.bean(location.neighbour(-1, 0));
+        return f.bean(location.neighbour(1, 0));
     }
 
     public Cell next(Field.Special direction) {
@@ -98,5 +99,54 @@ public class Cell {
         return c;
     }
 
+    public List<Cell> hitNeighbours() {
+        List<Cell> hits = new ArrayList<>();
+        for(Field.Special d : Field.Special.DIRECTIONS) {
+            Cell c = next(d);
+            if(c != null && c.isHit()) {
+                hits.add(c);
+            }
+
+        }
+        return hits;
+    }
+
+    public String toString() {
+        String s = location.toString() + " ";
+        String a = "▒▒";
+        if(isKnownClear()) {
+            a = "  ";
+        } else if(isHit()) {
+            a = "▉▉";
+        }
+        s = s +a;
+
+        return s;
+
+    }
+
+    public int hashCode(){
+        return location.x*256+location.y;
+    }
+
+    @Override
+    public int compareTo(Cell cell) {
+
+        if(location.y != cell.location.y) {
+            return location.y - cell.location.y;
+        } else {
+            return location.x - cell.location.x;
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Cell> cells = new ArrayList<>();
+        cells.add(new Cell(new Point(4, 4), null));
+        cells.add(new Cell(new Point(4, 3), null));
+        cells.add(new Cell(new Point(3, 4), null));
+
+        Collections.sort(cells);
+        System.out.println(cells);
+    }
 
 }

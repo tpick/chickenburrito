@@ -1,5 +1,6 @@
 package chicken.strategies;
 
+import chicken.Cell;
 import chicken.Field;
 import chicken.Point;
 import chicken.meadow.OwnField;
@@ -22,6 +23,11 @@ public class SmartFlavour extends AbstractFlavour {
     @Override
     public void play() {
         f.fire(new Point(r.nextInt(10), r.nextInt(10)), Field.Special.None);
+
+    }
+
+    @Override
+    public void hit(Cell shotAt, Cell hitAt, Field.Special lastSpecial) {
 
     }
 }

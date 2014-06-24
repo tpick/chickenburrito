@@ -1,6 +1,7 @@
 package chicken;
 
 
+import chicken.stats.ShootStats;
 import chicken.strategies.ProbabilityFlavour;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -9,6 +10,8 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebSocket(maxTextMessageSize = 64 * 1024)
 public class WSHandler implements Constants {
@@ -19,12 +22,18 @@ public class WSHandler implements Constants {
     private int turns;
     private int shots;
     private int misses;
+    private String opponentName;
+    private int rounds;
+    private int currentRound;
+    private List<int[]> stats = new ArrayList<>();
     public WSHandler(String name) {
         this.name = name;
     }
 
     private Flavour s;
     private Field f;
+    private String playerNr;
+    private ShootStats shootStats;
 
     public synchronized boolean waitForClose() {
         try {
@@ -47,25 +56,38 @@ public class WSHandler implements Constants {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
+        System.out.println("Connected. Starting game...");
+        startGame();
+        currentRound = 1;
 
+
+
+
+    }
+
+    private void startGame() {
         s = new ProbabilityFlavour();
-        f = new Field(this);
+        f = new Field(this, s);
+        name = "ChickenBurrito";
+        shootStats = new ShootStats();
         s.configure(this, f);
         turns = 0;
-        System.out.println("Connected. Starting game...");
+        shots = 0;
+        misses = 0;
         send("play");
-
-
     }
 
     public void send(String s) {
         try {
             session.getRemote().sendString(s);
+            System.out.println(" > " + s);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
+
+    boolean waitForTurn = false;
 
     @OnWebSocketMessage
     public synchronized void onMessage(String msg) {
@@ -76,21 +98,26 @@ public class WSHandler implements Constants {
             // message can be ignored
             return;
         }
+        System.out.println(" < " + msg);
         msg = msg.substring(4);
 
+        //TODO: save where opponent shoots to calc statistics to optimize ship placement
         switch (code) {
+            case NEW_NAME:
+                break;
             case BUSY:
                 session.close();
                 break;
             case HELLO:
-                send("rename "+name);
+                playerNr = getPlayerNr(msg);
+                send("rename " + name);
                 break;
             case PLACE_SHIPS:
                 s.placeShips();
                 break;
             case ENEMY_SHIP_HIT:
                 f.lastShotHit(true, msg);
-                s.play();
+                play(code);
                 shots++;
                 break;
             case ENEMY_SHIP_MISSED:
@@ -99,35 +126,98 @@ public class WSHandler implements Constants {
                 break;
             case ENEMY_SHIP_SUNK:
                 f.lastShotSunkShip(msg);
-                s.play();
+                play(code);
                 shots++;
                 break;
             case YOUR_TURN:
-                s.play();
+                play(code);
                 shots++;
                 turns++;
                 break;
             case DRONE:
+            case DRONEEE:
                 f.observed(msg);
                 break;
             case YOU_WIN:
-                System.out.printf("WIN in %d turns with %d shots and %d misses.%n", turns, shots, misses);
-                session.close();
+                s.gameOver(true);
+                nextGame();
                 break;
             case YOU_LOSE:
-                System.out.printf("FAIL in %d turns with %d shots and %d misses.%n", turns, shots, misses);
-                session.close();
+                s.gameOver(false);
+                nextGame();
                 break;
             case GAME_OVER:
-                session.close();
+                nextGame();
                 break;
             case YOUR_SHIP_MISSED:
+                shootStats.miss(msg);
+                break;
             case YOUR_SHIP_HIT:
+                shootStats.hit(msg);
+                break;
             case YOUR_SHIP_SUNK:
-                System.out.printf("%d %s%n", code, msg);
-
+                shootStats.sunk(msg);
+                break;
+            case OUT_OF_SPECIALPOWERS:
+                f.error(code);
+                play(YOUR_TURN);
+                break;
+            case NEW_GAME:
+                saveOpponentName(msg);
+                break;
+            case CLUSTERBOMB:
+            case CLUSTERBOMBEE:
+            case TORPEDO:
+            case TORPEDOEE:
+            case WILDFIRE:
+            case WILDFIREEE:
+                f.specialHit(code, msg);
                 break;
 
+
         }
+    }
+
+    private void play(int code) {
+        if(!waitForTurn || code == YOUR_TURN) {
+            s.play();
+            waitForTurn = f.getLastSpecial() != Field.Special.None;
+        }
+    }
+
+    private void nextGame() {
+        if (currentRound >= rounds) {
+            session.close();
+            turns = 0;
+            shots = 0;
+            misses = 0;
+            for(int[] s : stats) {
+                System.out.printf("%d turns with %d shots and %d misses.%n", s[0], s[1], s[2]);
+                turns += s[0];
+                shots += s[1];
+                misses += s[2];
+            }
+            System.out.printf("AVG: %d turns with %d shots and %d misses.%n", turns/rounds, shots/rounds, misses/rounds);
+
+
+        } else {
+            currentRound++;
+            int[] stat = new int[] {turns, shots, misses};
+            stats.add(stat);
+            startGame();
+        }
+
+    }
+
+    private void saveOpponentName(String msg) {
+        opponentName = msg.substring(msg.indexOf("vs. ") + 4, msg.length() - 12);
+        rounds = Integer.parseInt(msg.substring(14, msg.indexOf("rounds vs.") - 1));
+        shootStats.setName(opponentName);
+
+    }
+
+    private String getPlayerNr(String msg) {
+        int hashIndex = msg.indexOf('#');
+        return msg.substring(hashIndex + 1, hashIndex + 2);
     }
 }

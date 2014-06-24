@@ -8,4 +8,12 @@ public interface Flavour {
     void configure(WSHandler bws, Field field);
     void placeShips();
     void play();
+
+    void hit(Cell shotAt, Cell hitAt, Field.Special lastSpecial);
+
+    void sunkShip(Cell c, String msg);
+
+    void gameOver(boolean b);
+
+    void error(int errorCode);
 }
