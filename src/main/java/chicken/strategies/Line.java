@@ -23,6 +23,7 @@ public class Line implements Comparable<Line> {
         } else {
             d -= ((double)length)*f;
         }
+
         return (int) d;
     }
 

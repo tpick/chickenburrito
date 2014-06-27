@@ -14,11 +14,16 @@ public class Burrito {
         if (args.length > 0) {
             if(args[0].startsWith("ws://")) {
                 destUri = args[0];
+            } else {
+                name = args[0];
             }
-            name = args[0];
         }
         if (args.length > 1) {
-            destUri = args[1];
+            if(args[1].startsWith("ws://")) {
+                destUri = args[1];
+            } else {
+                name = args[1];
+            }
         }
         System.out.printf("Battleship Server Endpoint: %s%n", destUri);
         System.out.printf("Player name: %s%n", name);

@@ -123,10 +123,6 @@ public class WSHandler implements Constants {
                 shots++;
                 turns++;
                 break;
-            case DRONE:
-            case DRONEEE:
-                f.observed(msg);
-                break;
             case YOU_WIN:
                 s.gameOver(true);
                 printStats();
@@ -154,11 +150,6 @@ public class WSHandler implements Constants {
                 saveOpponentName(msg);
                 break;
             case CLUSTERBOMB:
-            case CLUSTERBOMBEE:
-            case TORPEDO:
-            case TORPEDOEE:
-            case WILDFIRE:
-            case WILDFIREEE:
                 f.specialHit(code, msg);
                 break;
 

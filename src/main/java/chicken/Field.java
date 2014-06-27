@@ -145,11 +145,6 @@ public class Field implements Iterable<Cell>, Constants {
         }
     }
 
-    public void observed(String msg) {
-        Cell c = bean(lastShot);
-        c.setObservedPieces(Integer.parseInt(msg.substring(16, 17)));
-    }
-
     public Cell bean(Point p) {
         if (p == null) {
             return null;
@@ -161,20 +156,19 @@ public class Field implements Iterable<Cell>, Constants {
     }
 
     /**
-     *  Y\X 0 1 2 ... E F
-     *    0
-     *    1
-     *    2
-     *    .
-     *    .
-     *    E
-     *    F
-     *
+     * Y\X 0 1 2 ... E F
+     * 0
+     * 1
+     * 2
+     * .
+     * .
+     * E
+     * F
      */
     public void print() {
         System.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
         for (int y = 0; y < 16; y++) {
-            System.out.print(Integer.toHexString(y)+"  |" );
+            System.out.print(Integer.toHexString(y) + "  |");
             for (int x = 0; x < 16; x++) {
                 Cell c = cells[x][y];
                 String s = "▒▒";
@@ -191,24 +185,17 @@ public class Field implements Iterable<Cell>, Constants {
     }
 
     public void specialHit(int code, String msg) {
-        switch (code) {
-            case CLUSTERBOMB:
-                Cell c = bean(lastShot);
-                if(!c.isHit()) {
-                    c.setKnownClear(true);
+        if (code == CLUSTERBOMB) {
+            Cell c = bean(lastShot);
+            if (!c.isHit()) {
+                c.setKnownClear(true);
+            }
+            for (Special s : Special.DIRECTIONS) {
+                if (c.next(s) != null && !c.next(s).isHit()) {
+                    c.next(s).setKnownClear(true);
                 }
-                for (Special s : Special.DIRECTIONS) {
-                    if(c.next(s) != null && !c.next(s).isHit()) {
-                        c.next(s).setKnownClear(true);
-                    }
-                }
-            case CLUSTERBOMBEE:
-            case TORPEDO:
-            case TORPEDOEE:
-            case DRONE:
-            case DRONEEE:
-            case WILDFIRE:
-            case WILDFIREEE:
+            }
+
         }
     }
 
