@@ -13,7 +13,7 @@ public interface Flavour {
 
     void sunkShip(Cell c, String msg);
 
-    void gameOver(boolean b);
+    History gameOver(boolean b);
 
     void error(int errorCode);
 }

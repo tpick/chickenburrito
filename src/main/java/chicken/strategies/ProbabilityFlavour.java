@@ -1,8 +1,10 @@
 package chicken.strategies;
 
+import chicken.Burrito;
 import chicken.Cell;
 import chicken.Constants;
 import chicken.Field;
+import chicken.History;
 import chicken.Point;
 import chicken.meadow.OwnField;
 import chicken.meadow.Ship;
@@ -19,6 +21,7 @@ import java.util.Random;
  */
 public class ProbabilityFlavour extends AbstractFlavour implements Constants {
 
+    private final List<History> history;
     Random r = new Random();
 
     List<Ship> hitShips = new ArrayList<>();
@@ -26,7 +29,9 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
 
     List<Point> firstShots = new ArrayList<>();
 
-    public ProbabilityFlavour() {
+    public ProbabilityFlavour(List<History> history) {
+        this.history = history;
+
         firstShots.add(new Point(7, 7));
         firstShots.add(new Point(5, 5));
         firstShots.add(new Point(9, 9));
@@ -78,7 +83,7 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
          *  ..CC..
          *  CC??CC
          *  ..CC..
-         *  if all around cell is clear, cell itself is also clear
+         *  if all around cell is clear, cell itself is also clear, because smallest ship is 2 cells
          */
         boolean foundClear = true;
         while (foundClear) {
@@ -224,6 +229,9 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
             // if all cells have the same probability, we use another strategy:
 
 
+            double avgBorderAffinity = History.getAverage("borderAffinity", history);
+            boolean preferBorderLine = false;
+
             while (firstShots.size() > 0 && fire == null) {
                 // first shots are pre-defined
                 if (f.isHasCluster()) {
@@ -231,7 +239,7 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
                 }
                 Point s = firstShots.remove(0);
                 fire = f.bean(s);
-                if (fire.isKnownClear() && fire.isHit()) {
+                if (fire.isKnownClear() || fire.isHit()) {
                     fire = null;
                 } else {
                     if (f.isHasCluster()) {
@@ -247,11 +255,26 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
 
             }
 
+            if (avgBorderAffinity > 0.4) {
+                // turns out, preferring border takes more shots to win pct85Border scenario
+                //preferBorderLine = true;
+            }
+
+
             // if first shots are used up, shoot the longest unknown lines
             if (fire == null) {
                 List<Line> lines = findLines();
-                if (lines.size() > 0) {
 
+                if (preferBorderLine) {
+                    for (Iterator<Line> i = lines.iterator(); i.hasNext(); ) {
+                        Line line = i.next();
+                        if (!line.isBorder()) {
+                            i.remove();
+                        }
+                    }
+                }
+
+                if (lines.size() > 0) {
                     // find longest lines and pick random
                     int maxLength = lines.get(0).getLength();
                     int maxIndex = 0;
@@ -261,12 +284,68 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
                         }
                         maxIndex++;
                     }
-                    fire = f.bean(lines.get(r.nextInt(maxIndex)).getMiddle());
+                    List<Cell> candidates = new ArrayList<>();
+
+                    if (lines.get(0).getLength() <= 3) {
+                        // if only short lines left, we try to find crosses and Ts
+                        for (int i = 0; i < maxCount; i++) {
+                            Cell c = cells.get(i);
+                            if (c.isUnknownNWSE() >= 2) {
+                                candidates.add(c);
+                            }
+                        }
+
+                    }
+
+                    if (candidates.isEmpty()) {
+
+                        for (int i = 0; i < maxIndex; i++) {
+                            Line l = lines.get(i);
+                            if (l.getLength() > 2) {
+                                // ▒▒  ▒▒  ▒▒
+                                //   ▒▒  ▒▒
+                                // ▒▒  ▒▒  ▒▒
+                                // interleaved / twothirds strategy doesn't really add something, but also does not play worse
+                                for (int j = -(l.getLength() / 3 - 1); j <= (l.getLength() / 3); j++) {
+                                    Cell c = f.bean(l.getMiddle(j));
+                                    if (c != null && c.isUnknownNWSE() >= 3) {
+                                        candidates.add(c);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (candidates.size() > 0) {
+                        int maxUI = candidates.size();
+
+                        Collections.sort(candidates, new Comparator<Cell>() {
+                            @Override
+                            public int compare(Cell cell, Cell cell2) {
+                                return cell.isUnknownNWSE() - cell2.isUnknownNWSE();
+                            }
+                        });
+                        int maxUnknown = candidates.get(0).isUnknownNWSE();
+                        maxUI = 0;
+                        for(Cell c : candidates) {
+                            if(c.isUnknownNWSE() != maxUnknown) {
+                                break;
+                            }
+                            maxUI++;
+                        }
+
+                        fire = candidates.get(r.nextInt(maxUI));
+                    } else {
+                        fire = f.bean(lines.get(r.nextInt(maxIndex)).getMiddle(0));
+                    }
 
                 }
 
             }
+
+
         }
+
 
         // pick a random cell of the cells with max probability
         if (fire == null) {
@@ -386,12 +465,32 @@ public class ProbabilityFlavour extends AbstractFlavour implements Constants {
             hitShips.remove(sunk);
             sunkShips.add(sunk);
         } else {
-            System.out.println("Failed to find sunk ship around " + c);
+            Burrito.out.println("Failed to find sunk ship around " + c);
         }
     }
 
-    public void gameOver(boolean win) {
-        //TODO save where player places ships to create statistics
+    public History gameOver(boolean win) {
+        int hitCells = 0;
+        int unknownCells = 0;
+        int hitsOnBorder = 0;
+        for (Cell c : f) {
+            if (c.isHit()) {
+                hitCells++;
+                if (c.isBorder()) {
+                    hitsOnBorder++;
+                }
+            }
+            if (!c.isHit() && !c.isKnownClear()) {
+                unknownCells++;
+            }
+        }
+
+
+        double borderAffinity = (double) hitsOnBorder / 28;
+
+        History h = new History();
+        h.setBorderAffinity(borderAffinity);
+        return h;
 
     }
 

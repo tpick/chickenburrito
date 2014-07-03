@@ -1,5 +1,6 @@
 package chicken.meadow;
 
+import chicken.Burrito;
 import chicken.Cell;
 import chicken.Field;
 import chicken.Point;
@@ -62,7 +63,7 @@ public class OwnField extends Field {
 
                 placed = true;
             } catch (IllegalStateException e) {
-                System.out.println(e.getMessage());
+                Burrito.out.println(e.getMessage());
                 for (Cell c : getCellList()) {
                     c.setObservedPieces(0);
                 }
@@ -109,7 +110,7 @@ public class OwnField extends Field {
         if (tried > 10000) {
             throw new IllegalStateException("failed to place ship : " + d.getType());
         }
-        System.out.printf("Needed %d tries to place %s%n", tried, d.getType());
+        Burrito.out.printf("Needed %d tries to place %s%n", tried, d.getType());
 
         return d;
 
@@ -143,7 +144,7 @@ public class OwnField extends Field {
         if (tried > 10000) {
             throw new IllegalStateException("failed to place ship : " + d.getType());
         }
-        System.out.printf("Needed %d tries to place %s%n", tried, d.getType());
+        Burrito.out.printf("Needed %d tries to place %s%n", tried, d.getType());
         return d;
 
     }
@@ -186,18 +187,18 @@ public class OwnField extends Field {
     }
 
     public void print() {
-        System.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
+        Burrito.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
         for (int y = 0; y < 16; y++) {
-            System.out.print(Integer.toHexString(y) + "  |");
+            Burrito.out.print(Integer.toHexString(y) + "  |");
             for (int x = 0; x < 16; x++) {
                 Cell c = cells[x][y];
                 String s = "  ";
                 if (c.getObservedPieces() > 0) {
                     s = "▉▉";
                 }
-                System.out.print(s);
+                Burrito.out.print(s);
             }
-            System.out.println("|");
+            Burrito.out.println("|");
         }
 
     }

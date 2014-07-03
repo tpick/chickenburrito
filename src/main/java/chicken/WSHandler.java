@@ -23,6 +23,7 @@ public class WSHandler implements Constants {
     private int turns;
     private int shots;
     private int misses;
+    private int won = -1;
     private String opponentName;
     private int rounds;
     private int currentRound;
@@ -36,7 +37,7 @@ public class WSHandler implements Constants {
     private Field f;
     private String playerNr;
     private ShootStats shootStats;
-
+    private List<History> history = new ArrayList<>();
     public synchronized boolean waitForClose() {
         try {
             this.wait();
@@ -48,7 +49,7 @@ public class WSHandler implements Constants {
 
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        System.out.printf("Connection closed: %d - %s%n", statusCode, reason);
+        Burrito.out.printf("Connection closed: %d - %s%n", statusCode, reason);
         closed = true;
         synchronized (this) {
             this.notifyAll();
@@ -58,7 +59,7 @@ public class WSHandler implements Constants {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        System.out.println("Connected. Starting game...");
+        Burrito.out.println("Connected. Starting game...");
 
         currentRound = 0;
         send("play");
@@ -68,7 +69,7 @@ public class WSHandler implements Constants {
     public void send(String s) {
         try {
             session.getRemote().sendString(s);
-            System.out.println(" > " + s);
+            Burrito.out.println(" > " + s);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -86,7 +87,7 @@ public class WSHandler implements Constants {
             // message can be ignored
             return;
         }
-        System.out.println(" < " + msg);
+        Burrito.out.println(" < " + msg);
         msg = msg.substring(4);
 
         //TODO: save where opponent shoots to calc statistics to optimize ship placement
@@ -124,11 +125,16 @@ public class WSHandler implements Constants {
                 turns++;
                 break;
             case YOU_WIN:
-                s.gameOver(true);
-                printStats();
-                break;
             case YOU_LOSE:
-                s.gameOver(false);
+
+                if(code == YOU_WIN) {
+                    won = 1;
+                    f.lastShotSunkShip(msg);
+                } else {
+                    won = 0;
+                }
+                History h = s.gameOver(code == YOU_WIN);
+                history.add(h);
                 printStats();
                 break;
             case GAME_OVER:
@@ -166,20 +172,27 @@ public class WSHandler implements Constants {
     }
 
     private void printStats() {
+        int wonRounds = 0;
         if (currentRound >= rounds) {
-            int[] stat = new int[]{turns, shots, misses};
+            int[] stat = new int[]{turns, shots, misses, won};
             stats.add(stat);
 
             turns = 0;
             shots = 0;
             misses = 0;
+
             for (int[] s : stats) {
-                System.out.printf("%d turns with %d shots and %d misses.%n", s[0], s[1], s[2]);
-                turns += s[0];
-                shots += s[1];
-                misses += s[2];
+                Burrito.out.printf("%d turns with %d shots and %d misses.%n", s[0], s[1], s[2]);
+                if(s[3] == 1) {
+                    turns += s[0];
+                    shots += s[1];
+                    misses += s[2];
+                    wonRounds++;
+                }
             }
-            System.out.printf("AVG: %d turns with %d shots and %d misses.%n", turns / rounds, shots / rounds, misses / rounds);
+            if(wonRounds != 0) {
+                Burrito.out.printf("AVG won rounds: %d turns with %d shots and %d misses.%n", turns / wonRounds, shots / wonRounds, misses / wonRounds);
+            }
         }
     }
 
@@ -187,15 +200,17 @@ public class WSHandler implements Constants {
 
 
         if (currentRound > 0) {
-            int[] stat = new int[]{turns, shots, misses};
+            int[] stat = new int[]{turns, shots, misses, won};
             stats.add(stat);
         }
         currentRound++;
 
+
         if ("dumm".equals(name)) {
+            Burrito.out.print("using DumbFlavour");
             s = new DumbFlavour();
         } else {
-            s = new ProbabilityFlavour();
+            s = new ProbabilityFlavour(history);
         }
         f = new Field(this, s);
 
@@ -205,6 +220,7 @@ public class WSHandler implements Constants {
         turns = 0;
         shots = 0;
         misses = 0;
+        won = -1;
 
 
     }
@@ -212,7 +228,9 @@ public class WSHandler implements Constants {
     private void saveOpponentName(String msg) {
         opponentName = msg.substring(msg.indexOf("vs. ") + 4, msg.length() - 12);
         rounds = Integer.parseInt(msg.substring(14, msg.indexOf("rounds vs.") - 1));
-
+        currentRound = 0;
+        history = new ArrayList<>();
+        stats = new ArrayList<>();
 
     }
 

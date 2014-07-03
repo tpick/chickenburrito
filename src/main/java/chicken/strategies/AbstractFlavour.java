@@ -3,6 +3,7 @@ package chicken.strategies;
 import chicken.Cell;
 import chicken.Field;
 import chicken.Flavour;
+import chicken.History;
 import chicken.WSHandler;
 
 /**
@@ -30,7 +31,8 @@ public abstract class AbstractFlavour implements Flavour {
     }
 
     @Override
-    public void gameOver(boolean b) {
+    public History gameOver(boolean b) {
+        return null;
     }
 
     @Override

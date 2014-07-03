@@ -3,30 +3,54 @@ package chicken;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 
 public class Burrito {
 
+    private static volatile boolean debug = false;
+
+    public static class Lolgger {
+
+        public void printf(String s, Object ... v) {
+            if(debug) {
+                System.out.printf(s,v);
+            }
+        }
+
+        public void println(Object s) {
+            if(debug) {
+                System.out.println(s);
+            }
+        }
+
+        public void print(Object s) {
+            if(debug) {
+                System.out.print(s);
+            }
+
+        }
+    }
+
+    public static Lolgger out = new Lolgger();
+
     public static void main(String[] args) throws Exception {
         String destUri = "ws://localhost:40000/battle";
         String name = "ChickenBurrito";
+        for(String arg : args) {
+            if(arg.startsWith("ws://")) {
+                destUri = arg;
+            } else if("-d".equals(arg)) {
+                debug = true;
+            }else {
+                name = arg;
+            }
+        }
 
-        if (args.length > 0) {
-            if(args[0].startsWith("ws://")) {
-                destUri = args[0];
-            } else {
-                name = args[0];
-            }
-        }
-        if (args.length > 1) {
-            if(args[1].startsWith("ws://")) {
-                destUri = args[1];
-            } else {
-                name = args[1];
-            }
-        }
-        System.out.printf("Battleship Server Endpoint: %s%n", destUri);
-        System.out.printf("Player name: %s%n", name);
+        Burrito.out.printf("Battleship Server Endpoint: %s%n", destUri);
+        Burrito.out.printf("Player name: %s%n", name);
 
         WSHandler s1 = createClient(destUri, name);
 
@@ -45,7 +69,7 @@ public class Burrito {
         URI echoUri = new URI(destUri);
         ClientUpgradeRequest request = new ClientUpgradeRequest();
         client.connect(socket, echoUri, request);
-        System.out.printf("Connecting to : %s%n", echoUri);
+        Burrito.out.printf("Connecting to : %s%n", echoUri);
 
 
         return socket;

@@ -8,7 +8,7 @@ import java.util.List;
 
 
 @Data
-public class Cell implements Comparable<Cell>{
+public class Cell implements Comparable<Cell> {
 
     public Cell(Point p, Field f) {
         this.location = p;
@@ -91,7 +91,7 @@ public class Cell implements Comparable<Cell>{
     public Cell get(Field.Special... dirs) {
         Cell c = this;
         for (Field.Special d : dirs) {
-            if(c == null) {
+            if (c == null) {
                 return null;
             }
             c = c.next(d);
@@ -101,9 +101,9 @@ public class Cell implements Comparable<Cell>{
 
     public List<Cell> hitNeighbours() {
         List<Cell> hits = new ArrayList<>();
-        for(Field.Special d : Field.Special.DIRECTIONS) {
+        for (Field.Special d : Field.Special.DIRECTIONS) {
             Cell c = next(d);
-            if(c != null && c.isHit()) {
+            if (c != null && c.isHit()) {
                 hits.add(c);
             }
 
@@ -114,25 +114,33 @@ public class Cell implements Comparable<Cell>{
     public String toString() {
         String s = location.toString() + " ";
         String a = "▒▒";
-        if(isKnownClear()) {
+        if (isKnownClear()) {
             a = "  ";
-        } else if(isHit()) {
+        } else if (isHit()) {
             a = "▉▉";
         }
-        s = s +a;
+        s = s + a;
 
         return s;
 
     }
 
-    public int hashCode(){
-        return location.x*256+location.y;
+    public boolean equals(Object o) {
+        if(o instanceof Cell) {
+            Cell c = (Cell)o;
+            return c.location.equals(location);
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return location.x * 256 + location.y;
     }
 
     @Override
     public int compareTo(Cell cell) {
 
-        if(location.y != cell.location.y) {
+        if (location.y != cell.location.y) {
             return location.y - cell.location.y;
         } else {
             return location.x - cell.location.x;
@@ -146,7 +154,21 @@ public class Cell implements Comparable<Cell>{
         cells.add(new Cell(new Point(3, 4), null));
 
         Collections.sort(cells);
-        System.out.println(cells);
+        Burrito.out.println(cells);
     }
 
+    public boolean isBorder() {
+        return location.x == 0 || location.x == 15 || location.y == 0 || location.y == 15;
+    }
+
+    public int isUnknownNWSE() {
+        int c = 4;
+        for (Field.Special s : Field.Special.DIRECTIONS) {
+            if (next(s) != null && next(s).isKnownClear()) {
+                c++;
+            }
+        }
+
+        return c;
+    }
 }

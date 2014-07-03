@@ -45,7 +45,7 @@ public class Field implements Iterable<Cell>, Constants {
         }
         bean(p).setShotAt(true);
         bws.send(special.s + p);
-        System.out.println("Firing: " + special.s + p);
+        Burrito.out.println("Firing: " + special.s + p);
         lastShot = p;
         lastSpecial = special;
     }
@@ -90,7 +90,15 @@ public class Field implements Iterable<Cell>, Constants {
     }
 
     public void lastShotSunkShip(String msg) {
+        if(lastShot == null) {
+            return;
+        }
         Cell c = bean(lastShot);
+
+        if(c == null) {
+            return;
+        }
+
         c.setHit(true);
         boolean horizontal = false;
         if ((c.east() != null && c.east().isHit()) || (c.west() != null && c.west().isHit())) {
@@ -166,9 +174,9 @@ public class Field implements Iterable<Cell>, Constants {
      * F
      */
     public void print() {
-        System.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
+        Burrito.out.println("Y\\X 0 1 2 3 4 5 6 7 8 9 A B C D E F");
         for (int y = 0; y < 16; y++) {
-            System.out.print(Integer.toHexString(y) + "  |");
+            Burrito.out.print(Integer.toHexString(y) + "  |");
             for (int x = 0; x < 16; x++) {
                 Cell c = cells[x][y];
                 String s = "▒▒";
@@ -178,9 +186,9 @@ public class Field implements Iterable<Cell>, Constants {
                     s = "▉▉";
                 }
 
-                System.out.print(s);
+                Burrito.out.print(s);
             }
-            System.out.println("|");
+            Burrito.out.println("|");
         }
     }
 
